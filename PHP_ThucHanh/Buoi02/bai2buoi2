@@ -1,0 +1,224 @@
+<?php
+
+// Hàm xếp loại sinh viên
+function xepLoai($diem)
+{
+    if ($diem >= 8) {
+        return "Giỏi";
+    } elseif ($diem >= 6.5) {
+        return "Khá";
+    } elseif ($diem >= 5) {
+        return "Trung bình";
+    } else {
+        return "Chưa đạt";
+    }
+}
+
+$danhSachSinhVien = [];
+
+if (isset($_POST["hienThi"])) {
+
+    for ($i = 1; $i <= 3; $i++) {
+
+        $ten = $_POST["ten$i"];
+        $diem = $_POST["diem$i"];
+
+        $danhSachSinhVien[] = [
+            "ten" => $ten,
+            "diem" => $diem,
+            "xepLoai" => xepLoai($diem)
+        ];
+    }
+}
+
+?>
+
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Bài 3 - Bảng điểm sinh viên</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            padding: 40px;
+        }
+
+        .container {
+            width: 800px;
+            max-width: 95%;
+            margin: auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #ccc;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        .sinhvien {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f5f5f5;
+        }
+
+        label {
+            display: block;
+            margin-top: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            margin-top: 5px;
+        }
+
+        button {
+            padding: 10px 25px;
+            background-color: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #eee;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>BẢNG ĐIỂM 3 SINH VIÊN</h2>
+
+
+    <form method="POST">
+
+        <?php for ($i = 1; $i <= 3; $i++) { ?>
+
+            <div class="sinhvien">
+
+                <h3>Sinh viên <?php echo $i; ?></h3>
+
+                <label>Tên sinh viên:</label>
+
+                <input
+                    type="text"
+                    name="ten<?php echo $i; ?>"
+                    required
+                >
+
+                <label>Điểm:</label>
+
+                <input
+                    type="number"
+                    name="diem<?php echo $i; ?>"
+                    min="0"
+                    max="10"
+                    step="0.1"
+                    required
+                >
+
+            </div>
+
+        <?php } ?>
+
+
+        <button type="submit" name="hienThi">
+            Hiển thị bảng điểm
+        </button>
+
+    </form>
+
+
+    <?php if (!empty($danhSachSinhVien)) { ?>
+
+        <h3>KẾT QUẢ</h3>
+
+        <table>
+
+            <tr>
+
+                <th>STT</th>
+
+                <th>Tên sinh viên</th>
+
+                <th>Điểm</th>
+
+                <th>Xếp loại</th>
+
+            </tr>
+
+
+            <?php
+
+            $stt = 1;
+
+            foreach ($danhSachSinhVien as $sinhVien) {
+
+            ?>
+
+                <tr>
+
+                    <td>
+                        <?php echo $stt; ?>
+                    </td>
+
+                    <td>
+                        <?php echo $sinhVien["ten"]; ?>
+                    </td>
+
+                    <td>
+                        <?php echo $sinhVien["diem"]; ?>
+                    </td>
+
+                    <td>
+                        <?php echo $sinhVien["xepLoai"]; ?>
+                    </td>
+
+                </tr>
+
+            <?php
+
+                $stt++;
+
+            }
+
+            ?>
+
+        </table>
+
+    <?php } ?>
+
+</div>
+
+</body>
+
+</html>
