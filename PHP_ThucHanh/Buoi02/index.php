@@ -1,34 +1,65 @@
 <?php
 
-// Mảng lưu danh sách khóa học
-$danhSachKhoaHoc = [];
+session_start();
 
-// Hàm xác định mức học phí
-function xacDinhHocPhi($tinChi)
+/*
+    Tạo mảng lưu danh sách bài viết.
+    Session giúp dữ liệu không bị mất ngay khi tải lại trang.
+*/
+
+if (!isset($_SESSION["danhSachBaiViet"])) {
+    $_SESSION["danhSachBaiViet"] = [];
+}
+
+
+/*
+    Hàm xác định trạng thái bài viết
+    dựa vào vai trò của người đăng.
+*/
+
+function xacDinhTrangThai($vaiTro)
 {
-    if ($tinChi >= 3) {
-        return "Học phí cao";
+    if ($vaiTro == "Tác giả") {
+        return "Chờ kiểm duyệt";
+    } elseif ($vaiTro == "Biên tập viên") {
+        return "Đã duyệt";
+    } elseif ($vaiTro == "Quản trị viên") {
+        return "Đã xuất bản";
     } else {
-        return "Học phí cơ bản";
+        return "Chưa xác định";
     }
 }
 
-// Kiểm tra người dùng đã nhấn nút Thêm chưa
-if (isset($_POST["them"])) {
 
-    $tenKhoaHoc = $_POST["tenKhoaHoc"];
-    $tinChi = $_POST["tinChi"];
-    $loaiHocPhan = $_POST["loaiHocPhan"];
+/*
+    Xử lý dữ liệu khi người dùng nhấn nút Đăng bài.
+*/
 
-    $khoaHoc = [
-        "ten" => $tenKhoaHoc,
-        "tinChi" => $tinChi,
-        "loai" => $loaiHocPhan,
-        "hocPhi" => xacDinhHocPhi($tinChi)
+if (isset($_POST["dangBai"])) {
+
+    $tieuDe = $_POST["tieuDe"];
+    $tacGia = $_POST["tacGia"];
+    $chuyenMuc = $_POST["chuyenMuc"];
+    $vaiTro = $_POST["vaiTro"];
+    $noiDung = $_POST["noiDung"];
+
+    // Xác định trạng thái bài viết
+    $trangThai = xacDinhTrangThai($vaiTro);
+
+    // Tổ chức dữ liệu bằng mảng
+    $baiViet = [
+        "tieuDe" => $tieuDe,
+        "tacGia" => $tacGia,
+        "chuyenMuc" => $chuyenMuc,
+        "vaiTro" => $vaiTro,
+        "noiDung" => $noiDung,
+        "trangThai" => $trangThai
     ];
 
-    // Thêm khóa học vào mảng
-    $danhSachKhoaHoc[] = $khoaHoc;
+    // Thêm bài viết vào danh sách
+    $_SESSION["danhSachBaiViet"][] = $baiViet;
+
+    $thongBao = "Thêm bài viết thành công!";
 }
 
 ?>
@@ -43,19 +74,23 @@ if (isset($_POST["them"])) {
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>Quản lý khóa học</title>
+    <title>HNMU News - Quản lý bài viết</title>
 
     <style>
 
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: Arial, sans-serif;
-            background-color: #f2f2f2;
+            background-color: #f2f4f7;
             margin: 0;
-            padding: 40px;
+            padding: 30px;
         }
 
         .container {
-            width: 800px;
+            width: 1000px;
             max-width: 95%;
             margin: auto;
             background-color: white;
@@ -64,13 +99,24 @@ if (isset($_POST["them"])) {
             box-shadow: 0 0 10px #ccc;
         }
 
-        h1 {
+        .header {
             text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            margin-bottom: 10px;
             color: #333;
         }
 
+        .header p {
+            color: #666;
+        }
+
         h2 {
-            color: #444;
+            color: #333;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
         }
 
         label {
@@ -81,26 +127,42 @@ if (isset($_POST["them"])) {
         }
 
         input,
-        select {
+        select,
+        textarea {
             width: 100%;
             padding: 10px;
-            box-sizing: border-box;
             border: 1px solid #ccc;
-            border-radius: 5px;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        textarea {
+            height: 150px;
+            resize: vertical;
         }
 
         button {
             margin-top: 20px;
-            padding: 10px 25px;
+            padding: 12px 25px;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             background-color: #333;
             color: white;
+            font-size: 15px;
             cursor: pointer;
         }
 
         button:hover {
             background-color: #555;
+        }
+
+        .thongbao {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 6px;
+            color: #2e7d32;
+            font-weight: bold;
         }
 
         table {
@@ -113,18 +175,21 @@ if (isset($_POST["them"])) {
         td {
             border: 1px solid #ccc;
             padding: 10px;
-            text-align: center;
+            text-align: left;
+            vertical-align: top;
         }
 
         th {
-            background-color: #eee;
+            background-color: #eeeeee;
+            text-align: center;
         }
 
-        .thongbao {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f5f5f5;
-            border-radius: 5px;
+        .trang-thai {
+            font-weight: bold;
+        }
+
+        .noi-dung {
+            max-width: 250px;
         }
 
     </style>
@@ -135,63 +200,137 @@ if (isset($_POST["them"])) {
 
 <div class="container">
 
-    <h1>QUẢN LÝ KHÓA HỌC</h1>
+    <div class="header">
 
-    <h2>Nhập thông tin khóa học</h2>
+        <h1>HNMU NEWS</h1>
+
+        <p>
+            Cổng thông tin tin tức dành cho khoa và câu lạc bộ
+        </p>
+
+    </div>
+
+
+    <h2>Đăng bài viết</h2>
+
 
     <form method="POST">
 
-        <label>Tên khóa học:</label>
+        <label for="tieuDe">
+            Tiêu đề bài viết:
+        </label>
 
         <input
             type="text"
-            name="tenKhoaHoc"
-            placeholder="Nhập tên khóa học"
+            id="tieuDe"
+            name="tieuDe"
+            placeholder="Nhập tiêu đề bài viết"
             required
         >
 
-        <label>Số tín chỉ:</label>
+
+        <label for="tacGia">
+            Tác giả:
+        </label>
 
         <input
-            type="number"
-            name="tinChi"
-            min="1"
+            type="text"
+            id="tacGia"
+            name="tacGia"
+            placeholder="Nhập tên tác giả"
             required
         >
 
-        <label>Loại học phần:</label>
 
-        <select name="loaiHocPhan">
+        <label for="chuyenMuc">
+            Chuyên mục:
+        </label>
 
-            <option value="Bắt buộc">
-                Bắt buộc
+        <select
+            id="chuyenMuc"
+            name="chuyenMuc"
+        >
+
+            <option value="Tin tức">
+                Tin tức
             </option>
 
-            <option value="Tự chọn">
-                Tự chọn
+            <option value="Công nghệ">
+                Công nghệ
+            </option>
+
+            <option value="Sự kiện">
+                Sự kiện
+            </option>
+
+            <option value="Hoạt động CLB">
+                Hoạt động CLB
             </option>
 
         </select>
 
-        <button type="submit" name="them">
-            Thêm khóa học
+
+        <label for="vaiTro">
+            Vai trò người đăng:
+        </label>
+
+        <select
+            id="vaiTro"
+            name="vaiTro"
+        >
+
+            <option value="Tác giả">
+                Tác giả
+            </option>
+
+            <option value="Biên tập viên">
+                Biên tập viên
+            </option>
+
+            <option value="Quản trị viên">
+                Quản trị viên
+            </option>
+
+        </select>
+
+
+        <label for="noiDung">
+            Nội dung bài viết:
+        </label>
+
+        <textarea
+            id="noiDung"
+            name="noiDung"
+            placeholder="Nhập nội dung bài viết..."
+            required
+        ></textarea>
+
+
+        <button
+            type="submit"
+            name="dangBai"
+        >
+            Đăng bài
         </button>
 
     </form>
 
 
-    <?php if (isset($_POST["them"])): ?>
+    <?php
 
-        <div class="thongbao">
+    if (isset($thongBao)) {
 
-            Đã thêm khóa học thành công!
+        echo "<div class='thongbao'>";
+        echo $thongBao;
+        echo "</div>";
 
-        </div>
+    }
 
-    <?php endif; ?>
+    ?>
 
 
-    <h2>Danh sách khóa học</h2>
+    <h2>Danh sách bài viết</h2>
+
 
     <table>
 
@@ -199,21 +338,26 @@ if (isset($_POST["them"])) {
 
             <th>STT</th>
 
-            <th>Tên khóa học</th>
+            <th>Tiêu đề</th>
 
-            <th>Số tín chỉ</th>
+            <th>Tác giả</th>
 
-            <th>Loại học phần</th>
+            <th>Chuyên mục</th>
 
-            <th>Mức học phí</th>
+            <th>Vai trò</th>
+
+            <th>Trạng thái</th>
+
+            <th>Nội dung</th>
 
         </tr>
+
 
         <?php
 
         $stt = 1;
 
-        foreach ($danhSachKhoaHoc as $khoaHoc):
+        foreach ($_SESSION["danhSachBaiViet"] as $baiViet) {
 
         ?>
 
@@ -224,19 +368,27 @@ if (isset($_POST["them"])) {
             </td>
 
             <td>
-                <?php echo $khoaHoc["ten"]; ?>
+                <?php echo htmlspecialchars($baiViet["tieuDe"]); ?>
             </td>
 
             <td>
-                <?php echo $khoaHoc["tinChi"]; ?>
+                <?php echo htmlspecialchars($baiViet["tacGia"]); ?>
             </td>
 
             <td>
-                <?php echo $khoaHoc["loai"]; ?>
+                <?php echo $baiViet["chuyenMuc"]; ?>
             </td>
 
             <td>
-                <?php echo $khoaHoc["hocPhi"]; ?>
+                <?php echo $baiViet["vaiTro"]; ?>
+            </td>
+
+            <td class="trang-thai">
+                <?php echo $baiViet["trangThai"]; ?>
+            </td>
+
+            <td class="noi-dung">
+                <?php echo htmlspecialchars($baiViet["noiDung"]); ?>
             </td>
 
         </tr>
@@ -245,7 +397,7 @@ if (isset($_POST["them"])) {
 
             $stt++;
 
-        endforeach;
+        }
 
         ?>
 
